@@ -1,0 +1,38 @@
+version: "3"
+
+tasks:
+  default:
+    desc: Список доступных задач
+    cmds:
+      - task --list
+
+  build:
+    desc: Сборка приложения
+    cmds:
+      - go build -o bin/app ./cmd/app
+
+  run:
+    desc: Запуск приложения локально
+    cmds:
+      - go run ./cmd/app
+
+  test:
+    desc: Запуск тестов
+    cmds:
+      - go test ./...
+
+  lint:
+    desc: Линтинг (golangci-lint)
+    cmds:
+      - golangci-lint run
+    silent: true
+
+  fmt:
+    desc: Форматирование кода
+    cmds:
+      - go fmt ./...
+
+  clean:
+    desc: Очистка артефактов сборки
+    cmds:
+      - rm -rf bin

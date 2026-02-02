@@ -17,9 +17,23 @@ type Quest struct {
 
 // Task — отдельное задание в квесте
 type Task struct {
-	ID   int    // номер задания
-	Text string // текст задания
-	Hint string // подсказка
+	ID         int
+	Text       string
+	Hint       string
+	Difficulty TaskDifficulty
+	Answer     TaskAnswer
+}
+
+type TaskDifficulty struct {
+	Level int    // 1–5 (или 1–10)
+	Label string // easy | medium | hard | expert
+}
+
+type TaskAnswer struct {
+	Type       string   // choice | text | photo | offline
+	Expected   string   // ожидаемое значение (если применимо)
+	Options    []string // варианты ответа (для choice)
+	Evaluation string   // стратегия проверки: exact | fuzzy | ai | manual
 }
 
 // Location — географическая точка и её описание
