@@ -7,22 +7,22 @@ tasks:
       - task --list
 
   build:
-    desc: Сборка приложения
+    desc: Сборка бинарника приложения
     cmds:
       - go build -o bin/app ./cmd/app
 
   run:
-    desc: Запуск приложения локально
+    desc: Запуск сервера локально
     cmds:
       - go run ./cmd/app
 
   test:
-    desc: Запуск тестов
+    desc: Запуск всех тестов
     cmds:
       - go test ./...
 
   lint:
-    desc: Линтинг (golangci-lint)
+    desc: Линтинг кода
     cmds:
       - golangci-lint run
     silent: true
@@ -33,6 +33,11 @@ tasks:
       - go fmt ./...
 
   clean:
-    desc: Очистка артефактов сборки
+    desc: Очистка бинарников
     cmds:
       - rm -rf bin
+
+  txt:
+    desc: Создать текстовый файл со всем содержимым проекта
+    cmds:
+      - find . -type f \( -name "*.go" -o -name "*.md" -o -name "*.yml" \) -exec echo "===== {} =====" \; -exec cat {} \; > project_snapshot.txt
