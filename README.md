@@ -1,8 +1,15 @@
-# AI Geo Quest
+# Geo Quest
 
-AI Geo Quest — веб-приложение на Go, которое генерирует интерактивные городские квесты с помощью ИИ на основе географического положения пользователя.
+Geo Quest — веб-приложение на Go, которое генерирует интерактивные городские
+квесты с помощью ИИ на основе географического положения пользователя и хранит
+данные в базе для оффлайн-игры.
+Пользователь выбирает точку на карте или передаёт свою текущую геолокацию.
+Система анализирует окружение (тип местности, объекты рядом) и создаёт
+тематический квест: приключенческий, исторический или исследовательский.
+Все квесты, задания и рейтинги сохраняются в базе данных, что позволяет
+накапливать информацию и играть оффлайн, а также отслеживать прогресс и успехи
+пользователя.
 
-Пользователь выбирает точку на карте или передаёт свою текущую геолокацию, после чего система анализирует окружение (тип местности, объекты рядом) и создаёт тематический квест: приключенческий, исторический или исследовательский.
 
 ---
 
@@ -44,71 +51,91 @@ LLM (AI)
 ## Структура проекта
 
 ```
-ai-geo-quest/
-├── cmd/
-│   └── server/
-│       └── main.go          # точка входа
-├── internal/
-│   ├── api/
-│   │   ├── handler/
-│   │   │   └── quest.go     # обработчики API
-│   │   └── router.go        # роутинг
-│   ├── domain/
-│   │   └── quest.go         # доменные модели
-│   ├── service/
-│   │   └── quest_generator.go # бизнес-логика
-│   ├── maps/
-│   │   └── osm_client.go    # интеграция с OSM
-│   └── ai/
-│       └── client.go        # интеграция с LLM
-├── web/
-│   ├── index.html
-│   ├── app.js
-│   └── style.css
-├── configs/
-│   └── config.yaml
-├── go.mod
-└── README.md
+geo_quest/
+├── cmd/app/main.go                   # точка входа сервера
+├── internal/api/
+│   ├── handler/quest.go              # обработка запроса /quest
+│   └── router.go                     # настройка маршрутов
+├── internal/service/
+│   ├── quest_generator.go            # интерфейс генератора квестов
+│   └── mock_quest_generator.go       # мок-генератор для разработки
+├── internal/domain/
+│   └── quest.go                      # структуры Quest, Task, TaskAnswer, UserSignal
+├── internal/repository/
+│   ├── quest_repository.go           # работа с квестами в базе
+│   ├── task_repository.go            # работа с заданиями в базе
+│   ├── location_repository.go        # работа с местами/POI
+│   └── rating_repository.go          # работа с рейтингом и прогрессом пользователя
+├── internal/maps/                    # интеграция с картами и POI
+├── internal/ai/                      # интеграция с нейросетями
+└── internal/db/
+    ├── migrations/                   # миграции базы данных
+    └── db.go                         # подключение к базе данных, оффлайн-режим
 ```
 
 ---
 
-## Domain-модель
+## Domain
 
 ### Сущности
 
-#### Quest
-
 ```go
-type Quest struct {
-    ID       string  // уникальный идентификатор
-    Title    string  // название квеста
-    Intro    string  // вводный текст
-    Tasks    []Task  // список заданий
-    Location Location // исходная точка квеста
+type TaskDifficulty struct {
+    Level int    // 1–5
+    Label string // easy | medium | hard
 }
-```
 
-#### Task
+type TaskAnswer struct {
+    Type       string   // choice | text | photo | offline
+    Expected   string   // ожидаемый ответ
+    Options    []string // для тестовых заданий
+    Evaluation string   // стратегия проверки: exact | fuzzy | ai | manual
+}
 
-```go
 type Task struct {
-    ID   int    // номер задания
-    Text string // описание задания
-    Hint string // подсказка
+    ID         int
+    Text       string
+    Hint       string
+    Difficulty TaskDifficulty
+    Answer     TaskAnswer
+    LocationID int       // ссылка на место, где выполняется задание
 }
-```
 
-#### Location
-
-```go
 type Location struct {
-    Latitude  float64 // широта
-    Longitude float64 // долгота
-    Name      string  // название места или района
-    Type      string  // тип местности (парк, исторический центр, туристическая зона)
+    ID       int
+    Name     string
+    Latitude float64
+    Longitude float64
+    Type     string      // исторический, развлекательный, природный и т.д.
+}
+
+type Quest struct {
+    ID       string
+    Title    string
+    Intro    string
+    Tasks    []Task
+    Location Location
+    Signals  []UserSignal
+    Rating   float64     // средний рейтинг квеста
+}
+
+type UserSignal struct {
+    UserID   string
+    TaskID   int
+    Answer   string
+    Correct  bool
+    Timestamp time.Time
+}
+
+type UserProgress struct {
+    UserID    string
+    QuestID   string
+    Completed bool
+    Score     float64
+    Timestamp time.Time
 }
 ```
+
 
 ### Пример квеста
 

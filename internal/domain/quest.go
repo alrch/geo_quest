@@ -5,52 +5,66 @@ import (
 	"time"
 )
 
-// Quest — основной объект квеста
-type Quest struct {
-	ID       string       // уникальный идентификатор
-	Title    string       // название квеста
-	Intro    string       // вводный текст
-	Tasks    []Task       // список заданий
-	Location Location     // исходная точка квеста
-	Signals  []UserSignal // действия пользователя (ответы, оценки, комментарии)
+// TaskDifficulty хранит уровень сложности задания
+type TaskDifficulty struct {
+	Level int    // 1–5
+	Label string // easy | medium | hard
 }
 
-// Task — отдельное задание в квесте
+// TaskAnswer хранит ожидаемый ответ на задание, тип и стратегию проверки
+type TaskAnswer struct {
+	Type       string   // choice | text | photo | offline
+	Expected   string   // ожидаемый ответ
+	Options    []string // варианты для тестовых заданий
+	Evaluation string   // exact | fuzzy | ai | manual
+}
+
+// Task представляет задание и привязку к месту
 type Task struct {
 	ID         int
 	Text       string
 	Hint       string
 	Difficulty TaskDifficulty
 	Answer     TaskAnswer
+	LocationID int // ссылка на место, где выполняется задание
 }
 
-type TaskDifficulty struct {
-	Level int    // 1–5 (или 1–10)
-	Label string // easy | medium | hard | expert
-}
-
-type TaskAnswer struct {
-	Type       string   // choice | text | photo | offline
-	Expected   string   // ожидаемое значение (если применимо)
-	Options    []string // варианты ответа (для choice)
-	Evaluation string   // стратегия проверки: exact | fuzzy | ai | manual
-}
-
-// Location — географическая точка и её описание
+// Location хранит информацию о месте (POI)
 type Location struct {
-	Latitude  float64 // широта
-	Longitude float64 // долгота
-	Name      string  // название места
-	Type      string  // тип местности (парк, исторический центр, туристическая зона)
+	ID        int
+	Name      string
+	Latitude  float64
+	Longitude float64
+	Type      string // исторический, развлекательный, природный и т.д.
 }
 
-// UserSignal — сигнал от пользователя (ответ, оценка, комментарий)
+// Quest представляет квест с заданиями, локацией и рейтингом
+type Quest struct {
+	ID       string
+	Title    string
+	Intro    string
+	Tasks    []Task
+	Location Location
+	Signals  []UserSignal
+	Rating   float64 // средний рейтинг квеста
+}
+
+// UserSignal фиксирует действия пользователя
 type UserSignal struct {
-	UserID    string    // уникальный идентификатор пользователя
-	TaskID    int       // к какому заданию относится сигнал
-	Type      string    // тип сигнала: "answer", "rating", "comment"
-	Value     string    // значение сигнала
-	Timestamp time.Time // время сигнала
+	UserID    string
+	TaskID    int
+	Answer    string
+	Correct   bool
+	Timestamp time.Time
+}
+
+// UserProgress хранит прогресс пользователя по квесту
+type UserProgress struct {
+	UserID    string
+	QuestID   string
+	Completed bool
+	Score     float64
+	Timestamp time.Time
 }
 
 // AddTask добавляет новое задание в квест
